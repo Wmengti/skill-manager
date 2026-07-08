@@ -1,0 +1,34 @@
+{
+  "name": "skill-manager",
+  "version": "0.1.0",
+  "description": "Visualize, inspect, and audit local Codex skills from a plugin-backed data layer.",
+  "author": {
+    "name": "Local developer"
+  },
+  "keywords": [
+    "codex",
+    "skills",
+    "skill-manager",
+    "visualization"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Skill Manager",
+    "shortDescription": "Visual browser for local Codex skills.",
+    "longDescription": "Skill Manager scans local Codex skill folders, extracts frontmatter and summaries, and prepares the data needed for a visual skill browser, audit view, and future in-Codex management panel.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Interactive"
+    ],
+    "defaultPrompt": [
+      "打开 skill 管理器并刷新到最新。",
+      "查找描述偏短或名称重复的 skills。",
+      "按来源查看我安装的 Codex skills。"
+    ],
+    "brandColor": "#2563EB"
+  },
+  "mcpServers": "./.mcp.json",
+  "apps": "./.app.json"
+}

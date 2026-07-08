@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "skill-manager": {
+      "command": "python3",
+      "args": [
+        "./scripts/skill_manager_mcp.py"
+      ],
+      "cwd": "."
+    }
+  }
+}
