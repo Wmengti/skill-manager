@@ -23,6 +23,7 @@ It can be used in four ways:
 - as a native Codex widget launcher through the `render_skill_manager_widget` MCP tool
 - as a direct JSON exporter with `--dump-json`
 - as a static dashboard generator with `--write-dashboard <path>`
+- as an optional localhost preview through `scripts/open_skill_manager.py --serve`
 
 Use `render_skill_manager_widget` when the user asks to open or refresh the Skill Manager. It returns the widget resource `ui://widget/skill-manager/dashboard.html` through `openai/outputTemplate`, so Codex can render the panel without `file://` or a local HTTP server.
 
@@ -36,7 +37,13 @@ The legacy launcher lives at:
 
 `scripts/open_skill_manager.py`
 
-Use it only as a development fallback when the MCP widget path is unavailable.
+Use it as a development fallback when the MCP widget path is unavailable.
+
+If the user explicitly asks to open the dashboard in the right-side in-app browser, you may use:
+
+`python3 scripts/open_skill_manager.py --serve --port 8765`
+
+Then open the returned `http://127.0.0.1:8765/skill-dashboard.html` URL with the browser-control skill. Do not use this localhost service as the default path.
 
 ## Default Scan Roots
 
@@ -57,7 +64,7 @@ When the user asks to open the Skill Manager:
 4. Tell the user the fallback HTML path returned by the tool.
 5. If the user installs or updates skills later, tell them to say "打开 skill 管理器" again to regenerate both the widget data and fallback HTML.
 
-Do not use the browser-control skill to open the generated file automatically unless the user explicitly asks. Do not start a temporary local web server as the default path.
+Do not use the browser-control skill to open the generated file automatically unless the user explicitly asks. Do not start a temporary local web server as the default path, but keep the `--serve` fallback available for explicit browser-preview requests.
 
 When the user asks to inspect or audit skills:
 

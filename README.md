@@ -25,6 +25,7 @@
   - 名称不规范
 - 提供 Codex 原生 widget 面板，不依赖 `file://` 或本地 HTTP 服务
 - 保留静态 HTML 生成能力，方便开发调试
+- 保留可选本地服务预览，适合手动放到右侧内置浏览器查看
 
 ## 目录结构
 
@@ -141,6 +142,22 @@ assets/skill-dashboard.html
 ```bash
 python3 scripts/open_skill_manager.py
 ```
+
+## 可选：本地服务预览
+
+如果你明确想把 dashboard 放到右侧内置浏览器里看，可以在插件根目录运行：
+
+```bash
+python3 scripts/open_skill_manager.py --serve --port 8765
+```
+
+它会先刷新 `assets/skill-dashboard.html`，再提供一个本机地址：
+
+```text
+http://127.0.0.1:8765/skill-dashboard.html
+```
+
+这个只是备用预览方式，不是默认打开路径。
 
 或直接生成静态页面：
 
