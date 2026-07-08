@@ -23,7 +23,8 @@
   - 描述偏短
   - 名称重复
   - 名称不规范
-- 提供 MCP 数据层，后续可以接成真正的 Codex 原生面板
+- 提供 Codex 原生 widget 面板，不依赖 `file://` 或本地 HTTP 服务
+- 保留静态 HTML 生成能力，方便开发调试
 
 ## 目录结构
 
@@ -34,7 +35,6 @@ skill-manager/
 ├── .codex-plugin/
 │   └── plugin.json
 ├── .mcp.json
-├── .app.json
 ├── assets/
 │   └── skill-dashboard.html
 ├── scripts/
@@ -108,36 +108,25 @@ cp -R . ~/plugins/skill-manager
 
 Codex 会运行：
 
+`render_skill_manager_widget`
+
+这个 MCP 工具会重新扫描当前本机 skills，并返回：
+
+```text
+ui://widget/skill-manager/dashboard.html
+```
+
+Codex 会把它作为原生 widget 面板打开。这个流程不会经过 `file://`，也不需要你手动启动 `localhost` 服务。
+
+## 开发备用：静态页面
+
+如果 MCP widget 不可用，或你只是想调试 HTML，可以在插件根目录运行：
+
 ```bash
 python3 scripts/open_skill_manager.py
 ```
 
-这个脚本会重新扫描当前本机 skills，生成最新 dashboard，并输出本地页面地址。
-
-也可以手动运行：
-
-```bash
-cd ~/plugins/skill-manager
-python3 scripts/open_skill_manager.py
-```
-
-输出示例：
-
-```json
-{
-  "path": "/Users/you/plugins/skill-manager/assets/skill-dashboard.html",
-  "url": "file:///Users/you/plugins/skill-manager/assets/skill-dashboard.html",
-  "summary": {
-    "total": 116
-  }
-}
-```
-
-把 `url` 放到浏览器里打开即可。
-
-## 直接生成静态页面
-
-在插件根目录运行：
+或直接生成静态页面：
 
 ```bash
 python3 scripts/skill_manager_mcp.py --write-dashboard assets/skill-dashboard.html
@@ -159,8 +148,9 @@ python3 scripts/skill_manager_mcp.py --write-dashboard assets/skill-dashboard.ht
 }
 ```
 
-当前提供三个工具：
+当前提供四个工具：
 
+- `render_skill_manager_widget`：打开 Codex 原生 Skill 管理器面板
 - `list_skills`：扫描并返回 skills 元数据
 - `read_skill`：按名称或路径读取一个 `SKILL.md`
 - `write_dashboard`：重新生成静态 dashboard
@@ -196,7 +186,5 @@ git push -u origin main
 
 - 已经是一个合法 Codex 插件
 - 可以作为个人插件安装
-- 可以通过一句“打开 skill 管理器”刷新 dashboard
-- UI 目前是静态 HTML
-
-后续可以继续升级成真正的 Codex 原生 app 面板。
+- 可以通过一句“打开 skill 管理器”刷新并打开原生 widget
+- 静态 HTML 仍可作为开发备用路径

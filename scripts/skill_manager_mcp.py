@@ -19,6 +19,9 @@ DEFAULT_ROOTS = [
     Path.home() / ".codex" / "plugins" / "cache",
 ]
 
+WIDGET_URI = "ui://widget/skill-manager/dashboard.html"
+WIDGET_MIME_TYPE = "text/html;profile=mcp-app"
+
 
 @dataclass
 class SkillRecord:
@@ -413,6 +416,21 @@ def dashboard_html(inventory: dict[str, Any]) -> str:
 
 def handle_tool(name: str, arguments: dict[str, Any]) -> Any:
     roots = [Path(p) for p in arguments.get("roots", [])] or None
+    if name == "render_skill_manager_widget":
+        inventory = scan_skills(roots)
+        return {
+            "content": [{"type": "text", "text": "已打开 Skill 管理器，并刷新到最新本地 skills。"}],
+            "structuredContent": {
+                "version": 1,
+                "widget": "skill-manager-dashboard",
+                "rendering": "native-widget",
+                "summary": inventory["summary"],
+            },
+            "_meta": {
+                "openai/outputTemplate": WIDGET_URI,
+                "widgetData": inventory,
+            },
+        }
     if name == "list_skills":
         return scan_skills(roots)
     if name == "read_skill":
@@ -443,7 +461,7 @@ def run_mcp() -> None:
             if method == "initialize":
                 result = {
                     "protocolVersion": "2024-11-05",
-                    "capabilities": {"tools": {}},
+                    "capabilities": {"tools": {}, "resources": {}},
                     "serverInfo": {"name": "skill-manager", "version": "0.1.0"},
                 }
                 print(json.dumps(mcp_response(request_id, result)), flush=True)
@@ -451,6 +469,29 @@ def run_mcp() -> None:
                 continue
             elif method == "tools/list":
                 tools = [
+                    {
+                        "name": "render_skill_manager_widget",
+                        "title": "打开 Skill 管理器",
+                        "description": "Use this when the user asks to open, refresh, browse, or visualize the local Codex Skill Manager as a native widget.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {"roots": {"type": "array", "items": {"type": "string"}}},
+                        },
+                        "annotations": {
+                            "readOnlyHint": True,
+                            "destructiveHint": False,
+                            "idempotentHint": True,
+                            "openWorldHint": False,
+                        },
+                        "_meta": {
+                            "ui": {"resourceUri": WIDGET_URI, "visibility": ["model", "app"]},
+                            "ui/resourceUri": WIDGET_URI,
+                            "openai/outputTemplate": WIDGET_URI,
+                            "openai/widgetAccessible": True,
+                            "openai/toolInvocation/invoking": "正在打开 Skill 管理器...",
+                            "openai/toolInvocation/invoked": "Skill 管理器已打开",
+                        },
+                    },
                     {
                         "name": "list_skills",
                         "description": "Scan local Codex skill roots and return skill metadata.",
@@ -484,8 +525,55 @@ def run_mcp() -> None:
             elif method == "tools/call":
                 params = message.get("params") or {}
                 result = handle_tool(params.get("name"), params.get("arguments") or {})
-                content = [{"type": "text", "text": json.dumps(result, ensure_ascii=False, indent=2)}]
-                print(json.dumps(mcp_response(request_id, {"content": content})), flush=True)
+                if isinstance(result, dict) and "content" in result:
+                    print(json.dumps(mcp_response(request_id, result), ensure_ascii=False), flush=True)
+                else:
+                    content = [{"type": "text", "text": json.dumps(result, ensure_ascii=False, indent=2)}]
+                    print(json.dumps(mcp_response(request_id, {"content": content})), flush=True)
+            elif method == "resources/list":
+                resource = {
+                    "uri": WIDGET_URI,
+                    "name": "skill-manager-dashboard",
+                    "title": "Skill 管理器",
+                    "description": "本地 Codex skills 的可视化管理面板。",
+                    "mimeType": WIDGET_MIME_TYPE,
+                    "_meta": {
+                        "ui": {
+                            "prefersBorder": False,
+                            "csp": {"connectDomains": [], "resourceDomains": []},
+                        },
+                        "openai/widgetDescription": "展示本地 Codex skills，可搜索、按来源筛选，并查看状态。",
+                        "openai/widgetPrefersBorder": False,
+                        "openai/widgetCSP": {"connect_domains": [], "resource_domains": []},
+                    },
+                }
+                print(json.dumps(mcp_response(request_id, {"resources": [resource]}), ensure_ascii=False), flush=True)
+            elif method == "resources/read":
+                params = message.get("params") or {}
+                uri = params.get("uri")
+                if uri != WIDGET_URI:
+                    raise ValueError(f"Unknown resource: {uri}")
+                inventory = scan_skills()
+                metadata = {
+                    "ui": {
+                        "prefersBorder": False,
+                        "csp": {"connectDomains": [], "resourceDomains": []},
+                    },
+                    "openai/widgetDescription": "展示本地 Codex skills，可搜索、按来源筛选，并查看状态。",
+                    "openai/widgetPrefersBorder": False,
+                    "openai/widgetCSP": {"connect_domains": [], "resource_domains": []},
+                }
+                result = {
+                    "contents": [
+                        {
+                            "uri": WIDGET_URI,
+                            "mimeType": WIDGET_MIME_TYPE,
+                            "text": dashboard_html(inventory),
+                            "_meta": metadata,
+                        }
+                    ]
+                }
+                print(json.dumps(mcp_response(request_id, result), ensure_ascii=False), flush=True)
             else:
                 print(json.dumps(mcp_response(request_id, {}, None)), flush=True)
         except Exception as exc:

@@ -9,7 +9,7 @@ description: Use this skill when the user says "打开 skill 管理器", "打开
 
 Help the user understand what Codex skills are available locally and how they are likely to trigger.
 
-Use the plugin's MCP server or local script to scan skill roots, then summarize the inventory in a way that helps the user decide which skills are useful, stale, duplicated, broken, or worth improving.
+Use the plugin's MCP server to scan skill roots and open the native widget view, then summarize the inventory in a way that helps the user decide which skills are useful, stale, duplicated, broken, or worth improving.
 
 ## Data Layer
 
@@ -17,17 +17,20 @@ The scanner lives at:
 
 `scripts/skill_manager_mcp.py`
 
-The easiest user-facing launcher lives at:
-
-`scripts/open_skill_manager.py`
-
-It can be used in three ways:
+It can be used in four ways:
 
 - as a plugin MCP stdio server through `.mcp.json`
+- as a native Codex widget launcher through the `render_skill_manager_widget` MCP tool
 - as a direct JSON exporter with `--dump-json`
 - as a static dashboard generator with `--write-dashboard <path>`
 
-Use `open_skill_manager.py` when the user asks to open or refresh the Skill Manager. It regenerates the dashboard from the latest installed skills and prints the local file path plus a `file://` URL.
+Use `render_skill_manager_widget` when the user asks to open or refresh the Skill Manager. It returns the widget resource `ui://widget/skill-manager/dashboard.html` through `openai/outputTemplate`, so Codex can render the panel without `file://` or a local HTTP server.
+
+The legacy launcher lives at:
+
+`scripts/open_skill_manager.py`
+
+Use it only as a development fallback when the MCP widget path is unavailable.
 
 ## Default Scan Roots
 
@@ -42,9 +45,9 @@ The scanner finds folders that contain `SKILL.md`, reads frontmatter, and return
 
 When the user asks to open the Skill Manager:
 
-1. Run `python3 scripts/open_skill_manager.py`.
-2. Tell the user the dashboard was refreshed.
-3. Provide the generated HTML file path or `file://` URL.
+1. Call the plugin MCP tool `render_skill_manager_widget`.
+2. Let Codex render the returned `ui://widget/skill-manager/dashboard.html` widget.
+3. Tell the user the Skill Manager was refreshed from the latest local skills.
 
 When the user asks to inspect or audit skills:
 
@@ -56,8 +59,12 @@ When the user asks to inspect or audit skills:
 
 ## Visual Output
 
-For a quick local visual view, generate:
+For the normal Codex experience, render:
+
+`ui://widget/skill-manager/dashboard.html`
+
+For a quick local development fallback, generate:
 
 `assets/skill-dashboard.html`
 
-If the dashboard is generated from live data, tell the user where the HTML file was written.
+If the fallback dashboard is generated from live data, tell the user where the HTML file was written.
