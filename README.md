@@ -48,14 +48,20 @@ skill-manager/
 
 ## 安装到本机 Codex
 
-从仓库根目录执行：
+> 注意：把插件加入 `~/.agents/plugins/marketplace.json` 只是让它出现在 Codex 的插件列表里，不等于已经启用。还需要在 Codex 插件页里安装/启用一次。
+
+### 1. 复制插件到本机插件目录
+
+从这个仓库根目录执行：
 
 ```bash
 mkdir -p ~/plugins
 cp -R . ~/plugins/skill-manager
 ```
 
-然后把下面这一项加入 `~/.agents/plugins/marketplace.json` 的 `plugins` 数组：
+### 2. 加入个人插件市场
+
+把下面这一项加入 `~/.agents/plugins/marketplace.json` 的 `plugins` 数组：
 
 ```json
 {
@@ -72,7 +78,7 @@ cp -R . ~/plugins/skill-manager
 }
 ```
 
-如果 `~/.agents/plugins/marketplace.json` 还不存在，可以创建：
+如果 `~/.agents/plugins/marketplace.json` 还不存在，可以直接创建这个文件：
 
 ```json
 {
@@ -97,7 +103,37 @@ cp -R . ~/plugins/skill-manager
 }
 ```
 
-安装后，重启或刷新 Codex，让插件被重新加载。
+### 3. 在 Codex 里安装/启用
+
+完成上面两步后，重启或刷新 Codex，然后打开 Codex 的插件页面。
+
+你应该能在个人插件市场里看到 `skill-manager`。点击安装/启用后，再新开一个 Codex 对话。
+
+新对话里说：
+
+```text
+打开 skill 管理器
+```
+
+这时 Codex 才会加载插件贡献的 skill 和 MCP 工具。
+
+## 安装是否成功
+
+安装成功后，通常会出现类似这样的缓存目录：
+
+```text
+~/.codex/plugins/cache/personal/skill-manager/
+```
+
+如果这个目录没有出现，说明插件大概率只是被加入了 marketplace，还没有在 Codex 里真正安装/启用。
+
+成功启用后，说“打开 skill 管理器”时，Codex 应该能看到并调用：
+
+```text
+render_skill_manager_widget
+```
+
+如果 Codex 回复“没有看到 skill 管理器的专用工具”，基本就是当前对话还没加载到插件。请回到插件页确认已安装/启用，然后新开一个对话再试。
 
 ## 使用方式
 
