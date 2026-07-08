@@ -21,6 +21,7 @@ DEFAULT_ROOTS = [
 
 WIDGET_URI = "ui://widget/skill-manager/dashboard.html"
 WIDGET_MIME_TYPE = "text/html;profile=mcp-app"
+DEFAULT_DASHBOARD_PATH = Path(__file__).resolve().parents[1] / "assets" / "skill-dashboard.html"
 
 
 @dataclass
@@ -166,6 +167,13 @@ def read_skill(identifier: str, roots: list[Path] | None = None) -> dict[str, An
             path = Path(record["path"])
             return {"skill": record, "content": read_text(path)}
     raise ValueError(f"Skill not found: {identifier}")
+
+
+def write_dashboard_file(inventory: dict[str, Any], output: str | Path | None = None) -> dict[str, str]:
+    target = Path(output).expanduser() if output else DEFAULT_DASHBOARD_PATH
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(dashboard_html(inventory), encoding="utf-8")
+    return {"path": str(target.resolve()), "url": target.resolve().as_uri()}
 
 
 def dashboard_html(inventory: dict[str, Any]) -> str:
@@ -418,17 +426,27 @@ def handle_tool(name: str, arguments: dict[str, Any]) -> Any:
     roots = [Path(p) for p in arguments.get("roots", [])] or None
     if name == "render_skill_manager_widget":
         inventory = scan_skills(roots)
+        dashboard = write_dashboard_file(inventory, arguments.get("outputPath"))
+        message = (
+            "已打开 Skill 管理器，并刷新到最新本地 skills。"
+            f"备用静态 HTML 也已生成：{dashboard['path']}。"
+            "如果安装或更新了 skill，重新说“打开 skill 管理器”即可刷新。"
+        )
         return {
-            "content": [{"type": "text", "text": "已打开 Skill 管理器，并刷新到最新本地 skills。"}],
+            "content": [{"type": "text", "text": message}],
             "structuredContent": {
                 "version": 1,
                 "widget": "skill-manager-dashboard",
                 "rendering": "native-widget",
                 "summary": inventory["summary"],
+                "dashboardPath": dashboard["path"],
+                "dashboardUrl": dashboard["url"],
             },
             "_meta": {
                 "openai/outputTemplate": WIDGET_URI,
                 "widgetData": inventory,
+                "dashboardPath": dashboard["path"],
+                "dashboardUrl": dashboard["url"],
             },
         }
     if name == "list_skills":
@@ -437,10 +455,8 @@ def handle_tool(name: str, arguments: dict[str, Any]) -> Any:
         return read_skill(str(arguments["identifier"]), roots)
     if name == "write_dashboard":
         inventory = scan_skills(roots)
-        output = Path(arguments.get("outputPath") or "assets/skill-dashboard.html")
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(dashboard_html(inventory), encoding="utf-8")
-        return {"path": str(output.resolve()), "summary": inventory["summary"]}
+        dashboard = write_dashboard_file(inventory, arguments.get("outputPath"))
+        return {"path": dashboard["path"], "url": dashboard["url"], "summary": inventory["summary"]}
     raise ValueError(f"Unknown tool: {name}")
 
 
@@ -475,7 +491,10 @@ def run_mcp() -> None:
                         "description": "Use this when the user asks to open, refresh, browse, or visualize the local Codex Skill Manager as a native widget.",
                         "inputSchema": {
                             "type": "object",
-                            "properties": {"roots": {"type": "array", "items": {"type": "string"}}},
+                            "properties": {
+                                "roots": {"type": "array", "items": {"type": "string"}},
+                                "outputPath": {"type": "string"},
+                            },
                         },
                         "annotations": {
                             "readOnlyHint": True,

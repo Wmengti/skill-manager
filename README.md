@@ -118,6 +118,22 @@ ui://widget/skill-manager/dashboard.html
 
 Codex 会把它作为原生 widget 面板打开。这个流程不会经过 `file://`，也不需要你手动启动 `localhost` 服务。
 
+同时，它会自动刷新一个备用静态页面：
+
+```text
+assets/skill-dashboard.html
+```
+
+如果你想放到右侧内置浏览器里单独看，可以打开右侧浏览器后自己复制这个 HTML 路径或地址。插件不会默认启动本地服务，也不会默认自动控制浏览器。
+
+以后如果你安装、删除或更新了 skill，再对 Codex 说一次：
+
+```text
+打开 skill 管理器
+```
+
+它就会重新扫描，并同时刷新 widget 和这个静态 HTML。
+
 ## 开发备用：静态页面
 
 如果 MCP widget 不可用，或你只是想调试 HTML，可以在插件根目录运行：

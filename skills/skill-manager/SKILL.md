@@ -26,6 +26,12 @@ It can be used in four ways:
 
 Use `render_skill_manager_widget` when the user asks to open or refresh the Skill Manager. It returns the widget resource `ui://widget/skill-manager/dashboard.html` through `openai/outputTemplate`, so Codex can render the panel without `file://` or a local HTTP server.
 
+The same tool also writes a static fallback HTML file to:
+
+`assets/skill-dashboard.html`
+
+Tell the user this HTML was regenerated. If they want a separate browser view, they can open the right-side browser and copy the generated HTML path or URL themselves. Do not start a local HTTP server just to show the dashboard.
+
 The legacy launcher lives at:
 
 `scripts/open_skill_manager.py`
@@ -48,6 +54,10 @@ When the user asks to open the Skill Manager:
 1. Call the plugin MCP tool `render_skill_manager_widget`.
 2. Let Codex render the returned `ui://widget/skill-manager/dashboard.html` widget.
 3. Tell the user the Skill Manager was refreshed from the latest local skills.
+4. Tell the user the fallback HTML path returned by the tool.
+5. If the user installs or updates skills later, tell them to say "打开 skill 管理器" again to regenerate both the widget data and fallback HTML.
+
+Do not use the browser-control skill to open the generated file automatically unless the user explicitly asks. Do not start a temporary local web server as the default path.
 
 When the user asks to inspect or audit skills:
 
